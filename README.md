@@ -85,10 +85,10 @@ Let's go through some examples:
 
 ```kotlin
 object LoginFormState : State<EmailField, LoginForm.SubmitCredentials>() {
-	sealed class Action<O> {
-	    data class Submit(val credentials: Credentials) : Action<Credentials>()
-	    data class Validate(val email:String) : Action<String>()
-	}
+    sealed class Action<O> {
+        data class Submit(val credentials: Credentials) : Action<Credentials>()
+        data class Validate(val email:String) : Action<String>()
+    }
 
     fun submit(flow: Flow, credentials: Credentials) = dispatchAction(flow, Action.Submit(credentials))
     fun validate(flow: Flow, email: String) = dispatchAction(flow, Action.Validate(email))
@@ -107,13 +107,13 @@ object LoginFormState : State<EmailField, LoginForm.SubmitCredentials>() {
 ```kotlin
 object LoadingState : State<Credentials, Loading.Error>() {
 
-	sealed class Action<O> {
-    	data class Success(val profile: Profile) : Action<Profile>()
-    	data class Failure(val error: LoadingState.Error) : Action<LoadingState.Error>()
+    sealed class Action<O> {
+        data class Success(val profile: Profile) : Action<Profile>()
+        data class Failure(val error: LoadingState.Error) : Action<LoadingState.Error>()
     }
  
     sealed class Error {
-	    object InvalidCredentials : Error()
+        object InvalidCredentials : Error()
         object NetworkUnavailable : Error()
         object Unexpected : Error()
     }
@@ -128,7 +128,7 @@ object LoadingState : State<Credentials, Loading.Error>() {
 
 ```kotlin
 object ProfileState : State<Profile,  Profile.Logout>() {
-		object LogOut : Action<Nothing>()
+    object LogOut : Action<Nothing>()
     
     fun logOut(flow: Flow) = dispatchAction(flow, Profile.Action.LogOut)
 }
@@ -202,17 +202,17 @@ Let's focus on `LoginFormState`:
 
 ```kotlin  
 forState(LoginFormState) { emailField, action ->
-	when (action) {
-		is LoginFormState.Action.Submit -> goto(CheckCredentialsState) using action.credentials
-	    ...
-	}
+    when (action) {
+        is LoginFormState.Action.Submit -> goto(CheckCredentialsState) using action.credentials
+        ...
+    }
 }
 
 forState(LoadingState) { input, action ->
-	when (action) {
-		is LoadingState.Action.Success -> goto(ProfileState) using action.profile
-    is LoadingState.Action.Failure -> goto(ErrorState) using action.error
-	}
+    when (action) {
+        is LoadingState.Action.Success -> goto(ProfileState) using action.profile
+        is LoadingState.Action.Failure -> goto(ErrorState) using action.error
+    }
 }
 ```
 What we need to do is pretty simple. We need to make some computations while the screen is in a `Loading` state and **call an action on the `LoadingState`** when it's done.
@@ -221,17 +221,17 @@ In order to do that we need to listen the transitions to add our custom logic ri
 
 ```kotlin
 onTransition { flow, transition, action ->
-	when (transition) {
-		LoginFormState to LoadingState -> {
-			val credentials = LoadingState.getData(flow)
-			try{
-				val profile = bg { authService.signIn(credentials)}.await()
-				LoadingState.success(flow, profile)  
-			} catch(e:Exception) {
-				LoadingState.error(flow, UnexcpectedError)
-			}
-		}
-	}
+    when (transition) {
+        LoginFormState to LoadingState -> {
+            val credentials = LoadingState.getData(flow)
+            try{
+                val profile = bg { authService.signIn(credentials)}.await()
+                LoadingState.success(flow, profile)  
+            } catch(e:Exception) {
+                LoadingState.error(flow, UnexcpectedError)
+            }
+        }
+    }
 }
 ```
 > This example is using [coroutines](https://kotlinlang.org/docs/reference/coroutines.html) but we could use [RxJava](https://github.com/ReactiveX/RxJava), or anything else.
@@ -277,20 +277,20 @@ class LoginFlow : Flow({
     }
     
     onTransition { flow, transition, action ->
-		when (transition) {
+        when (transition) {
             LoginFormState to LoadingState -> checkCredentials(authService, LoadingState, flow)
         }
     }
 })
 
 fun checkCredentials(authService:AuthService, state:LoadingState, flow:Flow){
-	val credentials = LoadingState.getData(flow)
-	try{
-		val profile = bg { authService.signIn(credentials)}.await()
-		LoadingState.success(flow, profile)  
-	} catch(e:Exception) {
-		LoadingState.error(flow, UnexpectedError)
-	}
+    val credentials = LoadingState.getData(flow)
+    try{
+        val profile = bg { authService.signIn(credentials)}.await()
+        LoadingState.success(flow, profile)  
+    } catch(e:Exception) {
+        LoadingState.error(flow, UnexpectedError)
+    }
 }
 ```
 
@@ -336,10 +336,10 @@ Calling State actions is pretty straight forward when we look at the example bel
 
 ```kotlin
 fun submitCredentials(credentials: Credentials) {
-	when (flow.currentState) {
+    when (flow.currentState) {
         EmailState -> flow.currentStateAs<EmailState>()?.submitEmail(flow, credentials)
         EmailErrorState -> flow.currentStateAs<EmailErrorState>()?.retry(flow, credentials)
-	}
+    }
 }
 ```
 
