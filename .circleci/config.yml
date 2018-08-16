@@ -1,0 +1,48 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/Flow
+    docker:
+      - image: circleci/android:api-27-alpha
+    environment:
+      JVM_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - run:
+          name: Run Tests
+          command: ./gradlew test build
+      - store_artifacts:
+          path: flow/build/reports
+          destination: reports
+      - store_test_results:
+          path: flow/build/test-results
+  publish:
+    docker:
+      - image: circleci/android:api-27-alpha
+    environment:
+      JVM_OPTS: -Xmx3200m
+    steps:
+      - run:
+        name: Publish on Bintray
+        command: ./gradlew bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayKey=$BINTRAY_API_KEY -PdryRun=false
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+
+  publish:
+    jobs:
+      - build:
+        filters:  # required since `publish` has tag filters AND requires `build`
+          tags:
+            only: /.*/
+      - publish:
+        requires:
+          - build
+        filters:
+          tags:
+            only: /^v([0-9]*)./
+          branches:
+            only: master

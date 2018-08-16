@@ -9,9 +9,8 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:3.2.0-beta05'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.novoda:bintray-release:0.8.1'
 
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
@@ -26,5 +25,10 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
-group 'com.mboudraa.flow'
-version '1.0-SNAPSHOT'
+ext.releaseInfo = [
+        "userOrg" : 'mboudraa',
+        "groupId" : 'com.mboudraa.flow',
+        "version" : '0.1',
+        "website" : 'https://github.com/mboudraa/flow',
+        "licences": ['Apache-2.0']
+]

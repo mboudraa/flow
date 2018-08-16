@@ -1,6 +1,27 @@
+[![CircleCI](https://circleci.com/gh/mboudraa/flow/tree/master.svg?style=svg)](https://circleci.com/gh/mboudraa/flow/tree/master)
+[ ![Download](https://api.bintray.com/packages/mboudraa/maven/flow/images/download.svg) ](https://bintray.com/mboudraa/maven/flow/_latestVersion)
+
 # Flow
 
 If Redux/MVI and State machines architectures had a child, it would be **Flow**
+
+## Download
+
+Download the latest JAR or grab via Maven:
+
+```xml
+<dependency>
+  <groupId>com.mboudraa.flow</groupId>
+  <artifactId>flow</artifactId>
+  <version>0.1</version>
+</dependency>
+```
+
+or Gradle:
+
+```gradle
+implementation 'com.mboudraa.flow:flow:0.1'
+```
  
 ## A Few Words About Redux/MVI
 
