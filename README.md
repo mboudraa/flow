@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/mboudraa/flow/tree/master.svg?style=svg)](https://circleci.com/gh/mboudraa/flow/tree/master)
+
 # Flow
 
 If Redux/MVI and State machines architectures had a child, it would be **Flow**
