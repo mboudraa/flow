@@ -36,10 +36,14 @@ abstract class Flow(body: FlowBuilder.() -> Unit) {
     }
 
 
-    internal fun <INPUT, ACTION : Any> dispatchAction(state: State<INPUT, ACTION>, action: ACTION) {
+    internal fun <INPUT, ACTION : Any> dispatchAction(state: State<INPUT, ACTION>, action: ACTION): Boolean {
+        if (state != currentState) return false
+
         val transition = transitionsHolder.getTransition(state)?.invoke(TransitionBuilder(state), getStateData(state) as INPUT, action)
-        transition?.perform(this) ?: throw TransitionMissingException("transition is missing for action $action in state $state")
+        transition?.perform(this)
+                ?: throw TransitionMissingException("transition is missing for action $action in state $state")
         sideEffects?.invoke(this, transition.from to transition.to, action)
+        return true
     }
 
     internal fun <INPUT> setCurrentState(state: State<INPUT, *>, data: INPUT?) {
