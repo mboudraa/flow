@@ -7,7 +7,8 @@ typealias OnStateChangeListener = (state: State<*, *>, flow: Flow) -> Unit
 abstract class Flow(body: FlowBuilder.() -> Unit) {
 
     private val dataStore = DataStore()
-    private val listeners = arrayListOf<OnStateChangeListener>()
+    private val stateChangeListeners = arrayListOf<OnStateChangeListener>()
+    private val transitionListeners = arrayListOf<OnTransitionListener>()
     private val transitionsHolder: StateTransitionsHolder
     private val sideEffects: SideEffects?
 
@@ -28,20 +29,34 @@ abstract class Flow(body: FlowBuilder.() -> Unit) {
 
     fun addOnStateChangeListener(listener: OnStateChangeListener): Boolean {
         listener(currentState, this)
-        return listeners.add(listener)
+        return stateChangeListeners.add(listener)
     }
 
     fun removeOnStateChangeListener(listener: OnStateChangeListener): Boolean {
-        return listeners.remove(listener)
+        return stateChangeListeners.remove(listener)
     }
 
+    fun addOnTransitionListener(listener: OnTransitionListener): Boolean {
+        return transitionListeners.add(listener)
+    }
+
+    fun removeOnTransitionListener(listener: OnTransitionListener): Boolean {
+        return transitionListeners.remove(listener)
+    }
 
     internal fun <INPUT, ACTION : Any> dispatchAction(state: State<INPUT, ACTION>, action: ACTION): Boolean {
         if (state != currentState) return false
+        val previousState = currentState
 
         val transition = transitionsHolder.getTransition(state)?.invoke(TransitionBuilder(state), getStateData(state) as INPUT, action)
-        transition?.perform(this)
-                ?: throw TransitionMissingException("transition is missing for action $action in state $state")
+        transition?.run {
+            perform(this@Flow)
+            if (previousState != currentState) {
+                transitionListeners.forEach { it.onTransition(previousState to currentState, this@Flow) }
+            }
+        } ?: throw TransitionMissingException("transition is missing for action $action in state $state")
+
+
         sideEffects?.invoke(this, transition.from to transition.to, action)
         return true
     }
@@ -49,7 +64,7 @@ abstract class Flow(body: FlowBuilder.() -> Unit) {
     internal fun <INPUT> setCurrentState(state: State<INPUT, *>, data: INPUT?) {
         setStateData(state, data)
         currentState = state
-        listeners.forEach { it(currentState, this) }
+        stateChangeListeners.forEach { it(currentState, this) }
     }
 
     internal fun <INPUT> getStateData(state: State<INPUT, *>): INPUT? {
@@ -71,6 +86,10 @@ abstract class Flow(body: FlowBuilder.() -> Unit) {
         fun <DATA, STATE : State<DATA, *>> putData(state: STATE, data: DATA) {
             store[state.javaClass.canonicalName] = data
         }
+    }
+
+    interface OnTransitionListener {
+        fun onTransition(transition: Pair<State<*, *>, State<*, *>>, flow: Flow)
     }
 }
 

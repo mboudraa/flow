@@ -18,6 +18,7 @@ jobs:
           path: flow/build/test-results
           
   publish:
+    working_directory: ~/Flow
     docker:
       - image: circleci/android:api-27-alpha
     environment:
