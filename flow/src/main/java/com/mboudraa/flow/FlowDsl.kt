@@ -30,6 +30,10 @@ class FlowBuilder {
 
 class TransitionBuilder<INPUT, STATE : State<INPUT, *>>(private val from: STATE) {
 
+    fun <DEST_STATE : State<Unit, *>> goto(state: DEST_STATE): ActionTransition<INPUT, STATE, Unit, DEST_STATE> {
+        return ActionTransition(from, state, Unit)
+    }
+
     fun <DEST_INPUT, DEST_STATE : State<DEST_INPUT, *>> goto(state: DEST_STATE): EmptyTransition<INPUT, STATE, DEST_INPUT, DEST_STATE> {
         return EmptyTransition(from, state)
     }
