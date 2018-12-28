@@ -13,14 +13,14 @@ Download the latest JAR or grab via Maven:
 <dependency>
   <groupId>com.mboudraa.flow</groupId>
   <artifactId>flow</artifactId>
-  <version>0.1</version>
+  <version>0.2</version>
 </dependency>
 ```
 
 or Gradle:
 
 ```gradle
-implementation 'com.mboudraa.flow:flow:0.1'
+implementation 'com.mboudraa.flow:flow:0.2'
 ```
  
 ## A Few Words About Redux/MVI
