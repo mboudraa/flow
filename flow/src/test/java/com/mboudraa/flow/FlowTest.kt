@@ -16,6 +16,12 @@ class FlowTest {
         }
     }
 
+    object State3 : State<Int, State2.Action>() {
+        sealed class Action {
+            data class Action1(val data: Int) : Action()
+        }
+    }
+
     @Test fun `should set default state with default data`() {
         val expectedStateData = 10
         val flow = object : Flow({
@@ -108,7 +114,7 @@ class FlowTest {
 
     }
 
-    @Test fun `should listen transition`() {
+    @Test fun `should listen transition in Flow`() {
         lateinit var expectedTransition: Pair<State<*, *>, State<*, *>>
         lateinit var expectedAction: Any
 
@@ -128,6 +134,85 @@ class FlowTest {
 
         assertThat(expectedTransition).isEqualTo(State1 to State2)
         assertThat(expectedAction).isInstanceOf(State1.Action::class.java)
+    }
+
+    @Test fun `should forward transition to transition listeners`() {
+        val flow = object : Flow({
+            startWith(State1, "default data")
+
+            forState(State1) { _, action -> goto(State2) using action.data }
+            forState(State2) { _, action ->
+                when (action) {
+                    is State2.Action.Action1 -> goto(State3) using action.data
+                    FlowTest.State2.Action.Back -> TODO()
+                }
+            }
+
+        }), Flow.OnTransitionListener {
+            val transitions = arrayListOf<Pair<State<*, *>,State<*, *>>>()
+            override fun onTransition(transition: Pair<State<*, *>, State<*, *>>, flow: Flow) {
+                transitions.add(transition)
+            }
+        }
+        flow.addOnTransitionListener(flow)
+
+        flow.currentStateAs<State1>()!!.dispatchAction(flow, State1.Action(0))
+        flow.currentStateAs<State2>()!!.dispatchAction(flow, State2.Action.Action1(0))
+
+        assertThat(flow.transitions).containsExactly(State1 to State2, State2 to State3).inOrder()
+    }
+
+    @Test fun `should not forward transition to transition listeners when stay in same state`() {
+        val flow = object : Flow({
+            startWith(State1, "default data")
+
+            forState(State1) { _, action -> goto(State2) using action.data }
+            forState(State2) { _, action ->
+                when (action) {
+                    is State2.Action.Action1 -> stay using action.data
+                    FlowTest.State2.Action.Back -> goBackTo(State1)
+                }
+            }
+
+        }), Flow.OnTransitionListener {
+            val transitions = arrayListOf<Pair<State<*, *>,State<*, *>>>()
+            override fun onTransition(transition: Pair<State<*, *>, State<*, *>>, flow: Flow) {
+                transitions.add(transition)
+            }
+        }
+
+        flow.addOnTransitionListener(flow)
+
+        flow.currentStateAs<State1>()!!.dispatchAction(flow, State1.Action(0))
+        flow.currentStateAs<State2>()!!.dispatchAction(flow, State2.Action.Action1(0))
+        flow.currentStateAs<State2>()!!.dispatchAction(flow, State2.Action.Back)
+
+        assertThat(flow.transitions).containsExactly(State1 to State2, State2 to State1).inOrder()
+    }
+
+    @Test fun `should remove OnTransitionListener`() {
+        val flow = object : Flow({
+            startWith(State1, "default data")
+
+            forState(State1) { _, action -> goto(State2) using action.data }
+            forState(State2) { _, action ->
+                when (action) {
+                    is State2.Action.Action1 -> goto(State3) using action.data
+                    FlowTest.State2.Action.Back -> TODO()
+                }
+            }
+
+        }), Flow.OnTransitionListener {
+            val transitions = arrayListOf<Pair<State<*, *>,State<*, *>>>()
+            override fun onTransition(transition: Pair<State<*, *>, State<*, *>>, flow: Flow) {
+                transitions.add(transition)
+            }
+        }
+        flow.addOnTransitionListener(flow)
+        flow.currentStateAs<State1>()!!.dispatchAction(flow, State1.Action(0))
+        flow.removeOnTransitionListener(flow)
+        flow.currentStateAs<State2>()!!.dispatchAction(flow, State2.Action.Action1(0))
+        assertThat(flow.transitions).containsExactly(State1 to State2).inOrder()
     }
 
     @Test fun `should listen states change `() {
