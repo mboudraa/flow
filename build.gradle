@@ -28,7 +28,7 @@ task clean(type: Delete) {
 ext.releaseInfo = [
         "userOrg" : 'mboudraa',
         "groupId" : 'com.mboudraa.flow',
-        "version" : '0.1',
+        "version" : '0.2',
         "website" : 'https://github.com/mboudraa/flow',
         "licences": ['Apache-2.0']
 ]
