@@ -16,7 +16,13 @@ class FlowTest {
         }
     }
 
-    object State3 : State<Int, State2.Action>() {
+    object State3 : State<Int, State3.Action>() {
+        sealed class Action {
+            data class Action1(val data: Int) : Action()
+        }
+    }
+
+    object State4 : State<Unit, State4.Action>() {
         sealed class Action {
             data class Action1(val data: Int) : Action()
         }
@@ -55,6 +61,17 @@ class FlowTest {
 
         assertThat(flow.currentState).isEqualTo(State2)
         assertThat(flow.currentState.getData(flow)).isEqualTo(1)
+    }
+
+    @Test fun `should allow to go to State with Unit as input without using 'using' keyword`() {
+        val flow = object : Flow({
+            startWith(State1, "data")
+            forState(State1) { _, action -> goto(State4)}
+        }) {}
+
+        flow.currentStateAs<State1>()?.dispatchAction(flow, State1.Action(1))
+
+        assertThat(flow.currentState).isEqualTo(State4)
     }
 
     @Test fun `should stay in the same state when using stay`() {
