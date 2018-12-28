@@ -4,6 +4,6 @@ abstract class State<INPUT, ACTION : Any> {
 
     fun getData(flow: Flow): INPUT = flow.getStateData(this) as INPUT
 
-    fun dispatchAction(flow: Flow, action: ACTION) = flow.dispatchAction(this, action)
+    fun dispatchAction(flow: Flow, action: ACTION): Boolean = flow.dispatchAction(this, action)
 
 }
